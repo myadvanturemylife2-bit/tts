@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Hukum Dasar Kimia</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --bg: #ecf0f1;
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 95%; max-width: 900px; text-align: center; }
+        
+        /* Grid Layout */
+        .grid-container { display: flex; justify-content: center; margin: 20px 0; overflow-x: auto; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(19, 28px); 
+            grid-template-rows: repeat(19, 28px); 
+            gap: 1px; background: #34495e; border: 2px solid #34495e; 
+        }
+        .cell { background: white; width: 28px; height: 28px; position: relative; }
+        .black { background: #2c3e50; }
+        
+        .cell input {
+            width: 100%; height: 100%; border: none; text-align: center;
+            font-size: 14px; font-weight: bold; text-transform: uppercase; outline: none; background: transparent;
+        }
+        .cell input:focus { background: #dff9fb; }
+        .num { position: absolute; top: 0; left: 1px; font-size: 8px; color: #7f8c8d; pointer-events: none; }
+        .is-correct { background-color: #d4edda !important; }
+
+        /* Petunjuk */
+        .clues { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
+        .clue-box h3 { color: var(--accent); font-size: 18px; border-bottom: 2px solid var(--accent); margin-bottom: 10px; }
+        .clue-box p { font-size: 13px; margin: 5px 0; line-height: 1.4; }
+        
+        .check-btn { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 20px 0; }
+        .check-btn:hover { background: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Teka-Teki Silang: Hukum Dasar Kimia</h1>
+    <p>Isilah kotak di bawah ini berdasarkan petunjuk yang tersedia!</p>
+
+    <div class="grid-container">
+        <div id="tts-grid" class="grid"></div>
+    </div>
+
+    <div class="clues">
+        <div class="clue-box">
+            <h3>MENDATAR</h3>
+            <p><b>1.</b> Massa zat sebelum dan sesudah reaksi tetap sama.</p>
+            <p><b>2.</b> Ilmuwan pencetus hukum kekekalan massa.</p>
+            <p><b>3.</b> Perbandingan massa unsur dalam senyawa selalu tetap.</p>
+            <p><b>4.</b> Ilmuwan pencetus hukum perbandingan tetap.</p>
+            <p><b>5.</b> Massa atom relatif suatu unsur (singkatan).</p>
+            <p><b>6.</b> Massa molekul relatif suatu senyawa (singkatan).</p>
+            <p><b>7.</b> Jumlah Ar semua atom penyusun molekul.</p>
+        </div>
+        <div class="clue-box">
+            <h3>MENURUN</h3>
+            <p><b>A.</b> Perbandingan volume gas adalah bilangan bulat sederhana.</p>
+            <p><b>B.</b> Membahas massa unsur yang membentuk lebih dari satu senyawa.</p>
+            <p><b>C.</b> Ilmuwan pencetus hukum kelipatan berganda.</p>
+            <p><b>D.</b> Satuan dasar Ar ditetapkan dari 1/12 massa atom...</p>
+            <p><b>E.</b> Ilmuwan pencetus hukum kekekalan massa.</p>
+            <p><b>F.</b> Perbandingan massa unsur dalam senyawa disebut perbandingan...</p>
+            <p><b>G.</b> Mr digunakan dalam perhitungan massa ... zat.</p>
+        </div>
+    </div>
+
+    <button class="check-btn" onclick="validate()">Periksa Jawaban</button>
+    <h2 id="result"></h2>
+</div>
+
+<script>
+    // Data koordinat huruf (r=baris, c=kolom)
+    const answers = [
+        // Mendatar
+        ..."KEKEKALANMASSA".split('').map((char,i)=>({r:2, c:1+i, char})), //1
+        ..."LAVOISIER".split('').map((char,i)=>({r:4, c:4+i, char})),      //2
+        ..."PERBANDINGANTETAP".split('').map((char,i)=>({r:6, c:1+i, char})), //3
+        ..."PROUST".split('').map((char,i)=>({r:8, c:10+i, char})),       //4
+        ..."AR".split('').map((char,i)=>({r:10, c:2+i, char})),           //5
+        ..."MR".split('').map((char,i)=>({r:12, c:2+i, char})),           //6
+        ..."MR".split('').map((char,i)=>({r:14, c:14+i, char})),          //7
+        // Menurun
+        ..."GAYLUSSAC".split('').map((char,i)=>({r:2+i, c:1, char})),       //A
+        ..."KELIPATANBERGANDA".split('').map((char,i)=>({r:1+i, c:6, char})),//B
+        ..."DALTON".split('').map((char,i)=>({r:6+i, c:14, char})),          //C
+        ..."KARBON12".split('').map((char,i)=>({r:8+i, c:11, char})),        //D
+        ..."LAVOISIER".split('').map((char,i)=>({r:1+i, c:9, char})),        //E
+        ..."TETAP".split('').map((char,i)=>({r:6+i, c:17, char})),           //F
+        ..."MOLAR".split('').map((char,i)=>({r:11+i, c:4, char}))            //G
+    ];
+
+    const labels = [
+        {r:2, c:1, n:'1/A'}, {r:4, c:4, n:'2'}, {r:6, c:1, n:'3'}, {r:1, c:6, n:'B'},
+        {r:8, c:10, n:'4'}, {r:10, c:2, n:'5'}, {r:12, c:2, n:'6'}, {r:14, c:14, n:'7'},
+        {r:1, c:9, n:'E'}, {r:6, c:14, n:'C'}, {r:8, c:11, n:'D'}, {r:6, c:17, n:'F'}, {r:11, c:4, n:'G'}
+    ];
+
+    const grid = document.getElementById('tts-grid');
+    for(let r=0; r<19; r++){
+        for(let c=0; c<19; c++){
+            const cellData = answers.find(a => a.r === r && a.c === c);
+            const div = document.createElement('div');
+            if(cellData){
+                div.className = 'cell';
+                div.innerHTML = `<input type="text" maxlength="1" id="cell-${r}-${c}" data-ans="${cellData.char}">`;
+                const lbl = labels.find(l => l.r === r && l.c === c);
+                if(lbl) div.innerHTML += `<span class="num">${lbl.n}</span>`;
+            } else {
+                div.className = 'cell black';
+            }
+            grid.appendChild(div);
+        }
+    }
+
+    function validate() {
+        let correctCount = 0;
+        let total = 0;
+        const inputs = document.querySelectorAll('.cell input');
+        inputs.forEach(input => {
+            total++;
+            if(input.value.toUpperCase() === input.getAttribute('data-ans')){
+                input.parentElement.classList.add('is-correct');
+                correctCount++;
+            } else {
+                input.parentElement.classList.remove('is-correct');
+            }
+        });
+
+        const res = document.getElementById('result');
+        if(correctCount === total){
+            res.innerText = "🎉 Selamat! Semua jawaban benar.";
+            res.style.color = "green";
+        } else {
+            res.innerText = "Cek kembali, masih ada yang salah!";
+            res.style.color = "red";
+        }
+    }
+</script>
+
+</body>
+</html>
